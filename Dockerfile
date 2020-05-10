@@ -1,8 +1,14 @@
-FROM php:7-fpm
+FROM php:7-fpm-alpine
 
-RUN apt-get update && apt-get install -y git \
-    && apt-get install -y libicu-dev zlib1g-dev libmemcached-dev libmagickwand-dev libpq-dev \
-    && docker-php-ext-configure gd --with-jpeg-dir=/usr/local/include --with-png-dir=/usr/local/include \
-    && docker-php-ext-install -j$(nproc) intl bcmath zip bz2 pdo pdo_mysql pdo_pgsql gd pcntl \
-    && pecl install memcached imagick mongodb ; docker-php-ext-enable memcached imagick mongodb \
-    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+ARG UID="www-data"
+ARG GID="www-data"
+
+RUN apk add autoconf bzip2-dev gcc git icu-dev imagemagick-dev libc-dev libjpeg-turbo-dev libpng-dev libzip-dev libmemcached-dev make postgresql-dev zlib-dev \
+	&& docker-php-ext-configure gd --with-jpeg \
+	&& docker-php-ext-install -j$(nproc) bcmath bz2 gd intl json pcntl pdo_mysql pdo_pgsql sockets zip \
+	&& pecl install imagick memcached mongodb redis ; docker-php-ext-enable imagick memcached mongodb redis \
+	&& rm -rfv /var/cache/apk/* \
+	&& curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+	&& php -i
+
+USER ${UID}
